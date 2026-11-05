@@ -1,0 +1,39 @@
+version: 2.1
+
+orbs:
+  heroku: circleci/heroku@2.0
+
+jobs:
+  build:
+    docker:
+      - image: cimg/node:20.10
+    steps:
+      - checkout
+      - run:
+          name: Установка зависимостей
+          command: npm install
+      - run:
+          name: Проверка, что проект собрался
+          command: npm run build --if-present
+
+  deploy:
+    executor: heroku/default
+    steps:
+      - checkout
+      - heroku/install
+      - heroku/deploy-via-git:
+          force: true
+
+workflows:
+  build-and-deploy:
+    jobs:
+      - build:
+          filters:
+            branches:
+              only: main
+      - deploy:
+          requires:
+            - build
+          filters:
+            branches:
+              only: main
